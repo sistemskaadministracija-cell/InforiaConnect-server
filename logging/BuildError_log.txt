@@ -14,6 +14,17 @@ Outcome:
 
 -------------------------------------------------------------------------------
 
+Timestamp: 2026-06-06T01:53:27+02:00
+Error:
+  Docker resolved the absolute hbbs path, but the staged binary was not
+  executable inside the scratch image and exited with permission denied.
+Fix attempted:
+  Set executable mode 0755 explicitly on hbbs and hbbr during Docker COPY.
+Outcome:
+  Validation will run in the next GitHub Actions server-image build.
+
+-------------------------------------------------------------------------------
+
 Timestamp: 2026-06-06T01:16:40+02:00
 Error:
   The server image smoke test still could not start `hbbs`. Docker's explicit

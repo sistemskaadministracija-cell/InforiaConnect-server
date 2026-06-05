@@ -45,6 +45,28 @@ Validation:
 
 -------------------------------------------------------------------------------
 
+Timestamp: 2026-06-06T01:53:27+02:00
+Title: Preserve executable permissions in server image
+
+Changed files:
+  - docker-classic/Dockerfile
+  - logging/BuildError_log.txt
+  - logging/revisions.txt
+
+Changes:
+  - Applied mode 0755 to hbbs and hbbr with Docker COPY --chmod.
+  - Logged the confirmed permission-denied smoke-test failure.
+
+Reasons:
+  - Artifact transport removed executable mode before the scratch image was
+    built, so Docker could locate but not execute the binaries.
+
+Validation:
+  - The server code, tests, static build, image build, and publish all passed.
+  - Intended Actions run name: Preserve server binary execute permissions.
+
+-------------------------------------------------------------------------------
+
 Timestamp: 2026-06-06T01:16:40+02:00
 Title: Use absolute server binary paths in containers
 
