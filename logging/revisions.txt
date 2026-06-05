@@ -1,0 +1,46 @@
+InforiaConnect Server Revision Log
+==================================
+
+Timestamp: 2026-06-06T00:54:07+02:00
+Title: Add reloadable InforiaConnect device ID blocklist
+
+Changed files:
+  - .github/workflows/inforia-server-build.yml
+  - AGENTS.md
+  - deploy/docker-compose.yml
+  - logging/revisions.txt
+  - scripts/block-id.sh
+  - scripts/list-blocked-ids.sh
+  - scripts/unblock-id.sh
+  - src/blocked_ids.rs
+  - src/lib.rs
+  - src/main.rs
+  - src/rendezvous_server.rs
+
+Changes:
+  - Added a file-backed numerical ID blocklist that reloads automatically.
+  - Blocked devices are denied registration, shown as offline, and cannot be
+    targeted through punch-hole or relay setup requests.
+  - Added a dedicated server response value for the custom InforiaConnect
+    client to display an administrator-blocked status.
+  - Added block, unblock, and list helper scripts for the persistent VM data
+    directory without embedding production IDs in Git.
+  - Added a deployment compose file that preserves host networking, restart
+    policy, server address, key mode, and the existing persistent data mount.
+  - Added a focused GitHub Actions workflow that builds static hbbs/hbbr
+    binaries and publishes the custom image to GitHub Container Registry.
+
+Reasons:
+  - Allow administrators to revoke a known InforiaConnect device ID without
+    deleting client configuration or changing router and firewall settings.
+  - Keep blocklist operations auditable, reversible, and independent from
+    client or server image rebuilds.
+
+Validation:
+  - Confirmed Git diff whitespace checks pass.
+  - Confirmed the helper scripts pass shell syntax validation.
+  - Local Rust compilation is unavailable because this Windows environment
+    lacks the MSVC linker; the Linux GitHub Actions build is authoritative.
+  - Intended Actions run name: ID blocklist server image.
+
+-------------------------------------------------------------------------------

@@ -1,0 +1,97 @@
+name: InforiaConnect server image
+run-name: ${{ inputs.build_name || 'ID blocklist server image' }}
+
+on:
+  push:
+    branches:
+      - inforia-1.1.15
+  workflow_dispatch:
+    inputs:
+      build_name:
+        description: Descriptive name shown in the Actions tab
+        required: true
+        default: Validate ID blocklist server image
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/inforiaconnect-server
+
+jobs:
+  build:
+    name: Build Linux server binaries
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout server source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.88
+        with:
+          targets: x86_64-unknown-linux-musl
+
+      - name: Install native test dependencies
+        run: sudo apt-get update && sudo apt-get install --yes libsqlite3-dev libsodium-dev pkg-config
+
+      - name: Install cross compiler
+        uses: taiki-e/install-action@cross
+
+      - name: Run blocklist tests
+        run: cargo test blocked_ids --lib
+
+      - name: Build static server binaries
+        run: cross build --release --target x86_64-unknown-linux-musl --bin hbbs --bin hbbr
+
+      - name: Stage image files
+        run: |
+          mkdir image
+          cp target/x86_64-unknown-linux-musl/release/hbbs image/
+          cp target/x86_64-unknown-linux-musl/release/hbbr image/
+          cp docker-classic/Dockerfile image/Dockerfile
+          chmod +x image/hbbs image/hbbr
+
+      - name: Upload server image context
+        uses: actions/upload-artifact@v4
+        with:
+          name: inforia-server-image-context
+          path: image
+          if-no-files-found: error
+
+  publish:
+    name: Publish server image
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download server image context
+        uses: actions/download-artifact@v4
+        with:
+          name: inforia-server-image-context
+          path: image
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and publish image
+        uses: docker/build-push-action@v6
+        with:
+          context: image
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:1.1.15-id-blocklist
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Smoke test published image
+        run: |
+          docker run --rm --entrypoint hbbs "${IMAGE_NAME}:1.1.15-id-blocklist" --version
+          docker run --rm --entrypoint hbbr "${IMAGE_NAME}:1.1.15-id-blocklist" --version

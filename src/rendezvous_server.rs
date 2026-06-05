@@ -1,3 +1,4 @@
+use crate::blocked_ids::BlockedIds;
 use crate::common::*;
 use crate::peer::*;
 use hbb_common::{
@@ -11,7 +12,7 @@ use hbb_common::{
         stream::{SplitSink, StreamExt},
     },
     log,
-    protobuf::{Message as _, MessageField},
+    protobuf::{EnumOrUnknown, Message as _, MessageField},
     rendezvous_proto::{
         register_pk_response::Result::{TOO_FREQUENT, UUID_MISMATCH},
         *,
@@ -60,6 +61,8 @@ static ROTATION_RELAY_SERVER: AtomicUsize = AtomicUsize::new(0);
 type RelayServers = Vec<String>;
 const CHECK_RELAY_TIMEOUT: u64 = 3_000;
 static ALWAYS_USE_RELAY: AtomicBool = AtomicBool::new(false);
+const BLOCKED_RESULT: i32 = 9;
+const BLOCKED_REASON: &str = "Device is blocked by the administrator";
 
 // Store punch hole requests
 use once_cell::sync::Lazy;
@@ -88,6 +91,7 @@ pub struct RendezvousServer {
     relay_servers0: Arc<RelayServers>,
     rendezvous_servers: Arc<Vec<String>>,
     inner: Arc<Inner>,
+    blocked_ids: BlockedIds,
 }
 
 enum LoopFailure {
@@ -127,6 +131,7 @@ impl RendezvousServer {
                     .unwrap_or_default(),
             )
         };
+        let blocked_ids_file = get_arg_or("blocked-ids-file", "blocked_ids.txt".to_owned());
         let mut rs = Self {
             tcp_punch: Arc::new(Mutex::new(HashMap::new())),
             pm,
@@ -142,6 +147,7 @@ impl RendezvousServer {
                 mask,
                 local_ip,
             }),
+            blocked_ids: BlockedIds::new(blocked_ids_file),
         };
         log::info!("mask: {:?}", rs.inner.mask);
         log::info!("local-ip: {:?}", rs.inner.local_ip);
@@ -326,6 +332,16 @@ impl RendezvousServer {
                 Some(rendezvous_message::Union::RegisterPeer(rp)) => {
                     // B registered
                     if !rp.id.is_empty() {
+                        if self.blocked_ids.contains(&rp.id) {
+                            log::warn!("Rejected registration from blocked ID {}", rp.id);
+                            let mut msg_out = RendezvousMessage::new();
+                            msg_out.set_register_peer_response(RegisterPeerResponse {
+                                request_pk: true,
+                                ..Default::default()
+                            });
+                            socket.send(&msg_out, addr).await?;
+                            return Ok(());
+                        }
                         log::trace!("New peer registered: {:?} {:?}", &rp.id, &addr);
                         self.update_addr(rp.id, addr, socket).await?;
                         if self.inner.serial > rp.serial {
@@ -344,6 +360,10 @@ impl RendezvousServer {
                         return Ok(());
                     }
                     let id = rk.id;
+                    if self.blocked_ids.contains(&id) {
+                        log::warn!("Rejected public key registration from blocked ID {}", id);
+                        return send_rk_res_value(socket, addr, BLOCKED_RESULT).await;
+                    }
                     let ip = addr.ip().to_string();
                     if id.len() < 6 {
                         return send_rk_res(socket, addr, UUID_MISMATCH).await;
@@ -499,6 +519,16 @@ impl RendezvousServer {
                     return true;
                 }
                 Some(rendezvous_message::Union::RequestRelay(mut rf)) => {
+                    if self.blocked_ids.contains(&rf.id) {
+                        log::warn!("Rejected relay request targeting blocked ID {}", rf.id);
+                        let mut msg_out = RendezvousMessage::new();
+                        msg_out.set_relay_response(RelayResponse {
+                            refuse_reason: BLOCKED_REASON.to_owned(),
+                            ..Default::default()
+                        });
+                        Self::send_to_sink(sink, msg_out).await;
+                        return true;
+                    }
                     // there maybe several attempt, so sink can be none
                     if let Some(sink) = sink.take() {
                         self.tcp_punch.lock().await.insert(try_into_v4(addr), sink);
@@ -697,6 +727,15 @@ impl RendezvousServer {
             return Ok((msg_out, None));
         }
         let id = ph.id;
+        if self.blocked_ids.contains(&id) {
+            log::warn!("Rejected connection request targeting blocked ID {}", id);
+            let mut msg_out = RendezvousMessage::new();
+            msg_out.set_punch_hole_response(PunchHoleResponse {
+                other_failure: BLOCKED_REASON.to_owned(),
+                ..Default::default()
+            });
+            return Ok((msg_out, None));
+        }
         // punch hole request from A, relay to B,
         // check if in same intranet first,
         // fetch local addrs if in same intranet.
@@ -797,6 +836,9 @@ impl RendezvousServer {
     ) -> ResultType<()> {
         let mut states = BytesMut::zeroed((peers.len() + 7) / 8);
         for (i, peer_id) in peers.iter().enumerate() {
+            if self.blocked_ids.contains(peer_id) {
+                continue;
+            }
             if let Some(peer) = self.pm.get_in_memory(peer_id).await {
                 let elapsed = peer.read().await.last_reg_time.elapsed().as_millis() as i32;
                 // bytes index from left to right
@@ -1349,6 +1391,20 @@ async fn send_rk_res(
     let mut msg_out = RendezvousMessage::new();
     msg_out.set_register_pk_response(RegisterPkResponse {
         result: res.into(),
+        ..Default::default()
+    });
+    socket.send(&msg_out, addr).await
+}
+
+#[inline]
+async fn send_rk_res_value(
+    socket: &mut FramedSocket,
+    addr: SocketAddr,
+    result: i32,
+) -> ResultType<()> {
+    let mut msg_out = RendezvousMessage::new();
+    msg_out.set_register_pk_response(RegisterPkResponse {
+        result: EnumOrUnknown::from_i32(result),
         ..Default::default()
     });
     socket.send(&msg_out, addr).await

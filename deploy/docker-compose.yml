@@ -1,0 +1,28 @@
+services:
+  hbbs:
+    image: ghcr.io/sistemskaadministracija-cell/inforiaconnect-server:1.1.15-id-blocklist
+    container_name: hbbs
+    network_mode: host
+    command:
+      - hbbs
+      - -r
+      - connect.inforia.si:21117
+      - -k
+      - _
+      - --blocked-ids-file
+      - /root/blocked_ids.txt
+    volumes:
+      - /home/inforiaadmin/rustdesk:/root
+    restart: always
+
+  hbbr:
+    image: ghcr.io/sistemskaadministracija-cell/inforiaconnect-server:1.1.15-id-blocklist
+    container_name: hbbr
+    network_mode: host
+    command:
+      - hbbr
+      - -k
+      - _
+    volumes:
+      - /home/inforiaadmin/rustdesk:/root
+    restart: always
