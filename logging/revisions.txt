@@ -45,6 +45,31 @@ Validation:
 
 -------------------------------------------------------------------------------
 
+Timestamp: 2026-06-06T01:16:40+02:00
+Title: Use absolute server binary paths in containers
+
+Changed files:
+  - .github/workflows/inforia-server-build.yml
+  - deploy/docker-compose.yml
+  - logging/BuildError_log.txt
+  - logging/revisions.txt
+
+Changes:
+  - Updated smoke-test entrypoints to `/usr/bin/hbbs` and `/usr/bin/hbbr`.
+  - Updated production Compose commands to the same absolute paths.
+  - Preserved the previous failed attempt and recorded the repeated failure.
+
+Reasons:
+  - Docker does not use the image PATH when resolving an explicit entrypoint
+    name in this scratch image.
+
+Validation:
+  - Confirmed both binaries are copied to `/usr/bin` by the image Dockerfile.
+  - Confirmed the server code and blocklist tests passed in both prior runs.
+  - Intended Actions run name: Use absolute server container paths.
+
+-------------------------------------------------------------------------------
+
 Timestamp: 2026-06-06T01:06:07+02:00
 Title: Make server binaries executable by container command name
 

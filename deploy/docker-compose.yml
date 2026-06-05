@@ -4,7 +4,7 @@ services:
     container_name: hbbs
     network_mode: host
     command:
-      - hbbs
+      - /usr/bin/hbbs
       - -r
       - connect.inforia.si:21117
       - -k
@@ -20,7 +20,7 @@ services:
     container_name: hbbr
     network_mode: host
     command:
-      - hbbr
+      - /usr/bin/hbbr
       - -k
       - _
     volumes:

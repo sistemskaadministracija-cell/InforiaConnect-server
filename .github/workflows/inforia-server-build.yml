@@ -93,5 +93,5 @@ jobs:
 
       - name: Smoke test published image
         run: |
-          docker run --rm --entrypoint hbbs "${IMAGE_NAME}:1.1.15-id-blocklist" --version
-          docker run --rm --entrypoint hbbr "${IMAGE_NAME}:1.1.15-id-blocklist" --version
+          docker run --rm --entrypoint /usr/bin/hbbs "${IMAGE_NAME}:1.1.15-id-blocklist" --version
+          docker run --rm --entrypoint /usr/bin/hbbr "${IMAGE_NAME}:1.1.15-id-blocklist" --version

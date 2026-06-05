@@ -13,3 +13,15 @@ Outcome:
   Validation will run in the next GitHub Actions server-image build.
 
 -------------------------------------------------------------------------------
+
+Timestamp: 2026-06-06T01:16:40+02:00
+Error:
+  The server image smoke test still could not start `hbbs`. Docker's explicit
+  entrypoint override did not search PATH inside the scratch image.
+Fix attempted:
+  Changed the workflow and deployment commands to use the absolute binary
+  paths `/usr/bin/hbbs` and `/usr/bin/hbbr`.
+Outcome:
+  Validation will run in the next GitHub Actions server-image build.
+
+-------------------------------------------------------------------------------
