@@ -44,3 +44,27 @@ Validation:
   - Intended Actions run name: ID blocklist server image.
 
 -------------------------------------------------------------------------------
+
+Timestamp: 2026-06-06T01:06:07+02:00
+Title: Make server binaries executable by container command name
+
+Changed files:
+  - docker-classic/Dockerfile
+  - logging/BuildError_log.txt
+  - logging/revisions.txt
+
+Changes:
+  - Added `/usr/bin` to the scratch image PATH.
+  - Logged the confirmed image smoke-test failure and corrective action.
+
+Reasons:
+  - The image contained `/usr/bin/hbbs` and `/usr/bin/hbbr`, but Docker could
+    not resolve the command names used by the smoke test and deployment file.
+
+Validation:
+  - The previous workflow successfully compiled, tested, and published the
+    image; only command resolution failed.
+  - Confirmed the Dockerfile copy destinations match the new PATH.
+  - Intended Actions run name: Fix server image binary PATH.
+
+-------------------------------------------------------------------------------

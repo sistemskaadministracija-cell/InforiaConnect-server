@@ -1,0 +1,15 @@
+InforiaConnect Server Build Error Log
+=====================================
+
+Timestamp: 2026-06-06T01:06:07+02:00
+Error:
+  The custom server image compiled, tested, and published, but its smoke test
+  could not start `hbbs` because the scratch image did not define `/usr/bin`
+  in PATH.
+Fix attempted:
+  Added `/usr/bin` to the image PATH so hbbs and hbbr can be invoked by the
+  same command names used by Docker Compose.
+Outcome:
+  Validation will run in the next GitHub Actions server-image build.
+
+-------------------------------------------------------------------------------
