@@ -45,6 +45,17 @@ Validation:
 
 -------------------------------------------------------------------------------
 
+Timestamp: 2026-06-06T03:41:18+02:00
+Title: Complete final server workflow validation
+
+Validation:
+  - GitHub Actions run 27048204295 completed successfully.
+  - Blocklist tests, static binaries, image publication, and both image smoke
+    tests passed.
+  - The final log-only push is expected not to start a server image build.
+
+-------------------------------------------------------------------------------
+
 Timestamp: 2026-06-06T03:04:32+02:00
 Title: Limit server image builds to image-affecting changes
 
