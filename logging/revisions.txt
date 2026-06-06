@@ -45,6 +45,29 @@ Validation:
 
 -------------------------------------------------------------------------------
 
+Timestamp: 2026-06-06T03:04:32+02:00
+Title: Limit server image builds to image-affecting changes
+
+Changed files:
+  - .github/workflows/inforia-server-build.yml
+  - logging/revisions.txt
+
+Changes:
+  - Restricted automatic server builds to Rust source, dependencies, build
+    scripts, the image Dockerfile, and the workflow itself.
+
+Reasons:
+  - Avoid rebuilding and republishing the server image for deployment notes,
+    audit logs, Compose changes, or documentation-only commits.
+
+Validation:
+  - Cancelled the redundant image build triggered by container-hardening logs.
+  - This workflow-file change intentionally triggers one final validation run.
+  - Intended Actions run name:
+    Limit server builds to image-affecting changes.
+
+-------------------------------------------------------------------------------
+
 Timestamp: 2026-06-06T03:03:15+02:00
 Title: Harden production server containers
 

@@ -5,6 +5,14 @@ on:
   push:
     branches:
       - inforia-1.1.15
+    paths:
+      - ".github/workflows/inforia-server-build.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "build.rs"
+      - "src/**"
+      - "libs/**"
+      - "docker-classic/Dockerfile"
   workflow_dispatch:
     inputs:
       build_name:
