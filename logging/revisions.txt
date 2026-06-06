@@ -63,7 +63,7 @@ Reasons:
 
 Validation:
   - The server code, tests, static build, image build, and publish all passed.
-  - Intended Actions run name: Preserve server binary execute permissions.
+  - GitHub Actions run 27046280606 passed both published-image smoke tests.
 
 -------------------------------------------------------------------------------
 
