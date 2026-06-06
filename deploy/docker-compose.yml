@@ -3,6 +3,11 @@ services:
     image: ghcr.io/sistemskaadministracija-cell/inforiaconnect-server@sha256:2a029367efd204ed78f35d8a6e6707cd36c3a4a8dce6af77e1cba173cbd217c7
     container_name: hbbs
     network_mode: host
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     command:
       - /usr/bin/hbbs
       - -r
@@ -19,6 +24,11 @@ services:
     image: ghcr.io/sistemskaadministracija-cell/inforiaconnect-server@sha256:2a029367efd204ed78f35d8a6e6707cd36c3a4a8dce6af77e1cba173cbd217c7
     container_name: hbbr
     network_mode: host
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     command:
       - /usr/bin/hbbr
       - -k

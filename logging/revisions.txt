@@ -45,6 +45,31 @@ Validation:
 
 -------------------------------------------------------------------------------
 
+Timestamp: 2026-06-06T03:03:15+02:00
+Title: Harden production server containers
+
+Changed files:
+  - deploy/docker-compose.yml
+  - logging/revisions.txt
+
+Changes:
+  - Made the hbbs and hbbr image filesystems read-only.
+  - Dropped all Linux capabilities.
+  - Enabled no-new-privileges for both containers.
+
+Reasons:
+  - Reduce the impact of a process compromise while retaining write access
+    only through the persistent `/root` data mount.
+
+Validation:
+  - Recreated both production containers with automatic rollback protection.
+  - Both containers remained running and all required listeners returned.
+  - Docker inspect confirmed read-only root filesystems, capability drop ALL,
+    and no-new-privileges.
+  - No network, firewall, DNS, routing, or SSH setting changed.
+
+-------------------------------------------------------------------------------
+
 Timestamp: 2026-06-06T02:21:15+02:00
 Title: Deploy and pin the validated custom server image
 
