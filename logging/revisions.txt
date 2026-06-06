@@ -45,6 +45,35 @@ Validation:
 
 -------------------------------------------------------------------------------
 
+Timestamp: 2026-06-06T02:21:15+02:00
+Title: Deploy and pin the validated custom server image
+
+Changed files:
+  - deploy/docker-compose.yml
+  - logging/revisions.txt
+
+Changes:
+  - Pinned both server services to the exact image digest that passed CI.
+  - Deployed the custom hbbs and hbbr containers on the Linux VM.
+  - Preserved host networking, restart policy, persistent data, server key,
+    database, relay address, and all application ports.
+  - Added an empty persistent blocked_ids.txt file.
+  - Hardened local permissions on the server private key and database.
+
+Reasons:
+  - Activate the ID blocklist server reproducibly without changing network
+    configuration or risking key/database replacement.
+
+Validation:
+  - Created and checksummed a consistent pre-deployment backup.
+  - Verified both digest-pinned containers are running after restart.
+  - Verified TCP 21115-21119 and UDP 21116 listeners.
+  - Verified the public-key checksum is unchanged.
+  - Verified hbbs loaded zero blocked IDs from the persistent file.
+  - Verified private key and database mode 0600 and data directory mode 0750.
+
+-------------------------------------------------------------------------------
+
 Timestamp: 2026-06-06T01:53:27+02:00
 Title: Preserve executable permissions in server image
 
